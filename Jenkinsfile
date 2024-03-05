@@ -16,10 +16,10 @@ pipeline {
         // these values were defined during Nexus server setup
         // note that underscore for variable names instead of dash. Dash is illegal character for Jenkinsfile.
         SNAP_REPO = 'vprofile-snapshot'
-        //NEXUS_USER = 'admin'
-        //NEXUS_PASSWORD = 'admin'
-        NEXUS_USER = "admin"
-        NEXUS_PASSWORD = "admin"
+        NEXUS_USER = 'admin'
+        NEXUS_PASSWORD = 'admin'
+        //NEXUS_USER = "admin"
+        //NEXUS_PASSWORD = "admin"
         RELEASE_REPO = 'vprofile-release'
         CENTRAL_REPO = 'vpro-maven-central'
         // note that NEXUSIP is the private IP of the Nexus EC2 instance. This does not change even after reboots,
