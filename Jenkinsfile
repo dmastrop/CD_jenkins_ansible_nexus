@@ -17,7 +17,8 @@ pipeline {
         // note that underscore for variable names instead of dash. Dash is illegal character for Jenkinsfile.
         SNAP_REPO = 'vprofile-snapshot'
         NEXUS_USER = 'admin'
-        NEXUS_PASSWORD = 'admin'
+        NEXUS_PASS = 'admin'
+        //NEXUS_PASSWORD = 'admin'
         //NEXUS_USER = "admin"
         //NEXUS_PASSWORD = "admin"
         RELEASE_REPO = 'vprofile-release'
