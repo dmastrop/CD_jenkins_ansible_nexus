@@ -14,6 +14,7 @@ pipeline {
     // pom.xml needs to access the central reposistory for the dependencies.....
     environment {
         // these values were defined during Nexus server setup
+        // note that underscore for variable names instead of dash. Dash is illegal character for Jenkinsfile.
         SNAP_REPO = 'vprofile-snapshot'
         NEXUS_USER = 'admin'
         NEXUS_PASSWORD = 'admin'
