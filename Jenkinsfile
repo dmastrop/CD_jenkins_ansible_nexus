@@ -56,15 +56,21 @@ pipeline {
 
         stage('Test'){
             steps {
-                sh 'mvn test'
+                //sh 'mvn test'
+                sh 'mvn -s settings.xml test'
                 // this will generate a test. Later on we will configure this to place it on Sonarqube
+                // note if do not add -s settings.xml then dependencies will be downloaded from maven instead
+                // of Nexus repo.
             }
         }    
 
         stage('Checkstyle Analysis'){
             steps {
-                sh 'mvn checkstyle:checkstyple'
+                //sh 'mvn checkstyle:checkstyple'
+                sh 'mvn -s settings.xml checkstyle:checkstyle'
                 // uses checkstyple code analysis and suggest best practices and vulnerabilities.
+                // note if do not add -s settings.xml then dependencies will be downloaded from maven instead
+                //of Nexus repo.
             }
         }
     }
