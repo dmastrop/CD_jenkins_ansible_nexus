@@ -13,6 +13,7 @@ pipeline {
     // the pom.xml will be used by maven to build from the source. The settings will define the Nexus repo URL that the
     // pom.xml needs to access the central reposistory for the dependencies.....
     environment {
+        //Nexus server environment:
         // these values were defined during Nexus server setup
         // note that underscore for variable names instead of dash. Dash is illegal character for Jenkinsfile.
         SNAP_REPO = 'vprofile-snapshot'
@@ -30,6 +31,13 @@ pipeline {
         NEXUS_GRP_REPO = 'vpro-maven-group'
         // the NEXUS_LOGIN was defined in the Jenkins credentials settings. This will be used later.
         NEXUS_LOGIN = 'nexuslogin'
+
+        //sonarqube environment:
+        // Manage Jenkins System: this references the server ip, token, etc....
+        SONARSERVER = 'sonarserver'
+        // Manage Jenkins Tools: this references the scanner version, etc....
+        SONARSCANNER = 'sonarscanner'
+
 
     }
 
@@ -73,5 +81,31 @@ pipeline {
                 //of Nexus repo.
             }
         }
+
+        stage('SonarAnalysis') {
+            environment {   
+                scannerHome = tool "${SONARSCANNER}"
+                // scannerHome is used as a local varaible here witin this stage. See below.
+            }
+            steps {
+                // the source directory src is the directory that it will scan
+                // project key is vprofile, project name is vprofile (This will appear in the sonarqube server)
+                // all of these paths and files are in the source code in the github repo
+                withSonarQubeEnv("${SONARSERVER}") {
+                   sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                   -Dsonar.projectName=vprofile \
+                   -Dsonar.projectVersion=1.0 \
+                   -Dsonar.sources=src/ \
+                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+              }
+            }
+        }
+    
+    // stages block end
     }
-}
+    
+// pipeline block end
+} 
