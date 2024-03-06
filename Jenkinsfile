@@ -1,7 +1,7 @@
 pipeline {
     agent any
     //run directly on Jenkins server without any agent for now
-    // test commit3
+    // test commit4
     tools {
         maven "MAVEN3_9"
         // there are 2 maven versions in tools. One installed via ssh terminal is MAVEN3_6
