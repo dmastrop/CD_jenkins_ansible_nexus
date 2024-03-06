@@ -42,6 +42,30 @@ pipeline {
                 // We want Jenkins to download dependencies from Nexus. That is specified in the pom.xml file in 
                 // this workspace.  The Nexus repo is specified at the  end of the pom.xml
             }
+
+            post {
+                success {
+                    echo "Now Archiving."
+                    archiveArtifacts artifacts: '**/*.war'
+                    //archiveArtifacts is a pliugin.  This states to archive everyting that ends in .war.
+                    //  our .war file is in the workspace for the particular jenkins pipeline
+                    // in the terminal is is under /var/lib/jenkins/workspace/vprofile-hkhcoder-ci-pipeline2/target
+                }
+            }
+        }
+
+        stage('Test'){
+            steps {
+                sh 'mvn test'
+                // this will generate a test. Later on we will configure this to place it on Sonarqube
+            }
+        }    
+
+        stage('Checkstyle Analysis'){
+            steps {
+                sh 'mvn checkstyle:checkstyple'
+                // uses checkstyple code analysis and suggest best practices and vulnerabilities.
+            }
         }
     }
 }
