@@ -105,6 +105,22 @@ pipeline {
             }
         }
     
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // timeout after 1 hour if the plugin below does not respond
+
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    // Quality Gate for this vprofile project is vprofileQG
+                    // the sonarqubetojenkins webhook is http://172.31.25.39:8080/sonarqube-webhook and has been
+                    // atached to the vprofile project in sonarqube.
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
     // stages block end
     }
     
