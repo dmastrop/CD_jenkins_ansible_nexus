@@ -1,3 +1,14 @@
+//COLOR_MAP for the post stages at the bottom
+// If SUCCESS then good which is green in slack app
+// If FAILURE then danger which is red in slack app
+// Thus we can color code the messages from slack
+
+def COLOR_MAP = [
+    'SUCCESS': 'good', 
+    'FAILURE': 'danger',
+]
+
+
 pipeline {
     agent any
     //run directly on Jenkins server without any agent for now
@@ -162,6 +173,25 @@ pipeline {
 
     // stages block end
     }
-    
+
+
+    // post stage is inserted here after all of the stages block
+    // note my channel is jenkinscicd2 and my workspace is vprofilecicd2 or fullname vprofilecicd2-ay41390
+    // currentResult will be either a SUCCESS FAILURE or UNSTABLE
+    // always block will always execute
+    // slackSend is the slack plugin that we installed: 3 args channel, color and message
+    // color keymap: currentBuild is a Jenkins global variable as is current Result
+    // COLOR_MAP is defined at the top of this Jenkinsfile.  This will allow slack message to color green the SUCCESS
+    // .... and color RED the FAILURE in the messages it sends out.
+    // message is the message slack will send.
+    post {
+        always {
+            echo 'Slack Notifications.'
+            slackSend channel: '#jenkinscicd2',
+                color: COLOR_MAP[currentBuild.currentResult],
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+        }
+    }
+
 // pipeline block end
 } 
