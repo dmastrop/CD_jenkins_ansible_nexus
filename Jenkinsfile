@@ -1,7 +1,7 @@
 pipeline {
     agent any
     //run directly on Jenkins server without any agent for now
-    // test commit5
+    // test commit6
     tools {
         maven "MAVEN3_9"
         // there are 2 maven versions in tools. One installed via ssh terminal is MAVEN3_6
@@ -133,7 +133,7 @@ pipeline {
                 // In artifacts are the list of arguments. The prefix of the artifact will be vproapp.  The file is in the
                 // target directory of the workspace in Jenkins.  var/lib/jenkins/workspace/vprofile-hkhcoder-ci-pipeline2/target
                 // The full name will be: vproapp-BUILD_ID-BUILD_TIMESTAMP.war
-                
+
                 // NOTE: as arguments to the plugin note the use of double quotes for all interopolated values, i.e.
                 // "${interopolation_variable}"
 
