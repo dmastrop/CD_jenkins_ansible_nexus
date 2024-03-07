@@ -30,7 +30,8 @@ pipeline {
         NEXUSIP = '172.31.28.191'
         NEXUSPORT = '8081'
         NEXUS_GRP_REPO = 'vpro-maven-group'
-        // the NEXUS_LOGIN was defined in the Jenkins credentials settings. This will be used later.
+        // the NEXUS_LOGIN was defined in the Jenkins credentials settings. This will be used later for the 
+        // artifact uploader stage at the bottom.  THis nexuslogin is defined in Manage Jenkins Credentials
         NEXUS_LOGIN = 'nexuslogin'
 
         //sonarqube environment:
@@ -120,6 +121,44 @@ pipeline {
                 }
             }
         }
+
+        stage("UploadArtifact"){
+            steps{
+                // the plugin info follows. Note that a parenthesis is used to hold the plugin arguments.
+                // groupId will create a folder and put the artifact inside of this folder
+                // BUILD_ID and BUILD_TIMESTAMP are Jenkins env variables. The BUILD_TIMESTAMP uses the timestamp plugin
+                // in which syntax is defined to build the timestamp. THese are referenced as env.BUILD and env.BUILD_TIMESTAMP
+                // The BUILD_ID is the pipeline job number as shown in the Web admin GUI.
+                // repository is where artifact will be stored. This is vprofile-release
+                // In artifacts are the list of arguments. The prefix of the artifact will be vproapp.  The file is in the
+                // target directory of the workspace in Jenkins.  var/lib/jenkins/workspace/vprofile-hkhcoder-ci-pipeline2/target
+                // The full name will be: vproapp-BUILD_ID-BUILD_TIMESTAMP.war
+                
+                // NOTE: as arguments to the plugin note the use of double quotes for all interopolated values, i.e.
+                // "${interopolation_variable}"
+
+                nexusArtifactUploader(
+                  nexusVersion: 'nexus3',
+                  protocol: 'http',
+                  nexusUrl: "${NEXUSIP}:${NEXUSPORT}",
+                  groupId: 'QA',
+                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                  repository: "${RELEASE_REPO}",
+                  credentialsId: "${NEXUS_LOGIN}",
+                  artifacts: [
+                    [artifactId: 'vproapp',
+                     classifier: '',
+                     file: 'target/vprofile-v2.war',
+                     type: 'war']
+                  ]
+                )
+                // nnexusArtifactUploader block end
+            }
+            //steps end block
+
+        }
+        // stage UploadArtifact end block
+
 
     // stages block end
     }
