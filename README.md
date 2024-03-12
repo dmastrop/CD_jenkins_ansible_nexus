@@ -4,6 +4,7 @@
 ## test push
 
 ## test push
+## test push from project 10 workspace folder
 - JDK 11 
 - Maven 3 
 - MySQL 8
