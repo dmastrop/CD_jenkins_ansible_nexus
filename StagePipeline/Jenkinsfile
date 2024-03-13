@@ -214,7 +214,7 @@ pipeline {
         // in the stage after this
         // docker.build is a Jenkins plugin.  docker.build (image_name:tag, Dockerfile_path)  The image name is vprofileappimg and also
         // serves as the respository name in ECR.  Tag will be BUILD_NUMBER.  Dockerfile_path is from my source code.
-        
+
         stage('Build App Image') {
             steps {
                 script {
@@ -270,3 +270,4 @@ pipeline {
 
 // pipeline block end
 } 
+// test edit1
