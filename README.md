@@ -9,6 +9,7 @@
 ## test again
 # test again after adding the branch to the settings for the pipeline trigger cicd-jenkins
 # test again
+# fixed disk shortage issue. Try again and then remove the Jenkinsfile because it is no longer required in root.
 - JDK 11 
 - Maven 3 
 - MySQL 8
