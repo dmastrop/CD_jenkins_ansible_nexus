@@ -11,6 +11,7 @@
 # test again
 # fixed disk shortage issue. Try again and then remove the Jenkinsfile because it is no longer required in root.
 # test
+# test for removal of 5th job with auto delete
 - JDK 11 
 - Maven 3 
 - MySQL 8
