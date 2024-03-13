@@ -21,6 +21,7 @@ pipeline {
         // JDK8 is deprecated. Do not use it. 
     }
 
+
     // the environment block is used to specify the variable values that are referenced in the pom.xml and settings.xml
     // the pom.xml will be used by maven to build from the source. The settings will define the Nexus repo URL that the
     // pom.xml needs to access the central reposistory for the dependencies.....
@@ -50,6 +51,24 @@ pipeline {
         SONARSERVER = 'sonarserver'
         // Manage Jenkins Tools: this references the scanner version, etc....
         SONARSCANNER = 'sonarscanner'
+
+        // ****NEW**** environmental variables for docker containerization to support ECR as the docker registry to hold the docker image:
+        // Note that these are for my specific ECR registry that was created earlier
+        // Note that the names of these credentials are not system names. They can be anything.
+
+        // Note awscredsjenkins is the name assigned to the IAM access and secret key created on AWS to access ECR and ECS
+        // Must use this name in Jenkinsfile as that is how Jenkins identifies these credentials
+        // registryCredential = 'ecr:us-west-1:awscreds'
+        registryCredential = 'ecr:us-west-2:awscredsjenkins'
+
+        // Name of the repository that will hold the docker image on my ECR registry. vprofileappimg is the repository name and also
+        // serves as the image name. In this repo, all the various tags for different versions will be stored.
+        // appRegistry = '951401132355.dkr.ecr.us-west-1.amazonaws.com/vprofileappimg'
+        appRegistry = '725291656587.dkr.ecr.us-west-2.amazonaws.com/vprofileappimg'
+
+        // this is simply the URL of the ECR repository itself
+        // vprofileRegistry = "https://951401132355.dkr.ecr.us-west-1.amazonaws.com"
+        vprofileRegistry = "https://725291656587.dkr.ecr.us-west-2.amazonaws.com"
 
 
     }
@@ -176,6 +195,7 @@ pipeline {
                   ]
                 )
                 // nnexusArtifactUploader block end
+            
             }
             //steps end block
 
@@ -183,8 +203,51 @@ pipeline {
         // stage UploadArtifact end block
 
 
-    // stages block end
+
+        // ****NEW**** new stages for the docker image and ECR
+
+        // This stage will build the docker image using the Dockerfile in ./Dockerfiles/app/multistage in my source code
+        // This is a 2 stage Dockerfile that will first build the vprofile.war artifact and then in the second container
+        // place the appliaction .war file into a tomcat container.  The vprofile app will run as the default app on the tomcate
+        // container.  This tomcat container image is what wwe will place in the ECR registry in the stage after this....
+        // Note that docker engine was installed on Jenkins Server. The variable dockerImage will be used to push the image to ECR
+        // in the stage after this
+        // docker.build is a Jenkins plugin.  docker.build (image_name:tag, Dockerfile_path)  The image name is vprofileappimg and also
+        // serves as the respository name in ECR.  Tag will be BUILD_NUMBER.  Dockerfile_path is from my source code.
+        
+        stage('Build App Image') {
+            steps {
+                script {
+                    dockerImage = docker.build( appRegistry + ":$BUILD_NUMBER", "./Docker-files/app/multistage/")
+                }
+            }
+        }
+        // stage Build App Image end block. This builds the docker image on the Jenkins server (docker engine is installed on Jenkins)
+
+
+        // docker.withRegistry plugin will upload the docker image to my ECR repo.  Using the registryCredential Jenkins will upload the 
+        // image named vprofileappimg which is the repo/image name already present on ECR. So only the URL is required, and this is vprofileRegistry
+        // The BUILD_NUMBER tag will create the entry in the ECR repo with the tag.
+        // dockerImage variable from previous stage has all of the information from the previous stage (vprofileappimg name, and the BUILD_NUMBER tag)
+
+        stage('Upload App Image') {
+          steps{
+            script {
+              docker.withRegistry( vprofileRegistry, registryCredential ) {
+                dockerImage.push("$BUILD_NUMBER")
+                dockerImage.push('latest')
+              }
+            }
+          }
+          // steps Upload App Image end block. This puts the tomcat vprofile app docker image on my ECR registry
+        }
+        // stage Upload App Image end block. The docker image upload to ECR
+
+  
     }
+    // ****stages block end*****
+
+
 
 
     // post stage is inserted here after all of the stages block
