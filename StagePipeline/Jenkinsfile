@@ -70,6 +70,13 @@ pipeline {
         // vprofileRegistry = "https://951401132355.dkr.ecr.us-west-1.amazonaws.com"
         vprofileRegistry = "https://725291656587.dkr.ecr.us-west-2.amazonaws.com"
 
+        // ****NEW**** for deployment to a running ECS cluster/service
+        //cluster = "vprostaging"
+        cluster = "vprofile-staging-ECS"
+
+        //service = "vproappprodsvc"
+        service = "vprofile-staging-service2-ECS"
+
 
     }
 
@@ -205,6 +212,7 @@ pipeline {
 
 
         // ****NEW**** new stages for the docker image and ECR
+        // NOTE that registry (ECR) variables defined at top of Jenkins file as part of environment
 
         // This stage will build the docker image using the Dockerfile in ./Dockerfiles/app/multistage in my source code
         // This is a 2 stage Dockerfile that will first build the vprofile.war artifact and then in the second container
@@ -242,6 +250,21 @@ pipeline {
           // steps Upload App Image end block. This puts the tomcat vprofile app docker image on my ECR registry
         }
         // stage Upload App Image end block. The docker image upload to ECR
+
+
+        //****NEW**** new stage for deployment of the container image that is on ECR to the running ECS cluster/service
+        // note the enviromental variables for cluster and service are defined at top of Jenkinsfile
+
+        // This stage will deploy the container image in the ECR to the running ECS cluster/service
+        // Using a shell command with AWS cli which we installed on this Jenkins server.  
+        // awscredsjenkins is the IAM user token and secret that we put in Jenkins so that it can access AWS
+        stage('Deploy to ECS staging') {
+            steps {
+                withAWS(credentials: 'awscredsjenkins', region: 'us-west-2') {
+                    sh 'aws ecs update-service --cluster ${cluster} --service ${service} --force-new-deployment'
+                } 
+            }
+        }
 
   
     }
