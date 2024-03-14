@@ -306,13 +306,3 @@ pipeline {
 
 // pipeline block end
 } 
-// test edit1
-// test edit2
-// test edit 3
-// test edit 4
-// test edit 5
-// test edit 6
-// test edit 7 build 9
-// test edit 8 build 10 with PST timestamp
-// test edit 9 build 11 with GMT+7 for PST with DST
-// test edit 10 build 12 with jenkins url webhook change
