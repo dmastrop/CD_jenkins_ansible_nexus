@@ -6,7 +6,7 @@
 
 
 
-/COLOR_MAP for the post stages at the bottom
+//COLOR_MAP for the post stages at the bottom
 // If SUCCESS then good which is green in slack app
 // If FAILURE then danger which is red in slack app
 // Thus we can color code the messages from slack
