@@ -81,7 +81,8 @@ pipeline {
         // ****NEW**** for deployment to a running ECS cluster/service
         //cluster = "vprostaging"
         //cluster = "vprofile-staging-ECS"
-        cluster = "vprofile-production-ECS"
+        // ************ NOTE: the vprofille-production-ECS is misspelled. Ugh!!!!!
+        cluster = "vprofille-production-ECS"
 
         //service = "vproappprodsvc"
         //service = "vprofile-staging-service2-ECS"
