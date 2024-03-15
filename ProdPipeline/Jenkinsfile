@@ -27,7 +27,7 @@ pipeline {
     //     // MAVEN3_9 is auto installed from the Java Tools configuration
     //     jdk "OracleJDK11"
     //     // JDK8 is deprecated. Do not use it. 
-    }
+    
 
 
     // the environment block is used to specify the variable values that are referenced in the pom.xml and settings.xml
