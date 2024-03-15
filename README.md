@@ -50,6 +50,17 @@ The build will be deployed to the Production ECS cluster (there is no rebuilding
 The running ECS cluster docker image should be replaced via a new timestamp. The old container that is running will be replaced
 Slack notification will be sent out once the docker image is deployed to the production ECS cluster.
 
+The staging code will need to be merged with the production code (production-jenkins main branch)
+Git checkout production-jenkins
+Git merge cicd-jenkins  (To merge the cicd-jenkins branch with the production-jenkins main branch)
+This will create a pull request on github repo.
+Do smoke testing and sanity testing
+Once approve the pull request the pipeline will be triggered
+
+Overall the Git push origin production-jenkins will trigger the production pipeline in Jenkins (pipeline #3) and this will deploy the docker image to the production ECS cluster
+
+
+
 
 
 
