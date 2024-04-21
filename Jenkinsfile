@@ -38,7 +38,8 @@ pipeline {
         CENTRAL_REPO = 'vpro-maven-central'
         // note that NEXUSIP is the private IP of the Nexus EC2 instance. This does not change even after reboots,
         // unlike public IP.  Jenkins server and Nexus server are in the same AWS VPC and in same subnet
-        NEXUSIP = '172.31.28.191'
+        //NEXUSIP = '172.31.28.191'
+        NEXUSIP = '172.31.52.38'
         NEXUSPORT = '8081'
         NEXUS_GRP_REPO = 'vpro-maven-group'
         // the NEXUS_LOGIN was defined in the Jenkins credentials settings. This will be used later for the 
