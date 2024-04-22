@@ -5,6 +5,7 @@
     tom_url: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.37/bin/apache-tomcat-8.5.37.tar.gz
 
   tasks:
+  # based upon operating system install the JDK
     - name: Install JDK on Centos 6/7
       yum:
         name: java-1.8.0-openjdk.x86_64
@@ -18,6 +19,7 @@
         update_cache: yes
       when: ansible_distribution == 'Ubuntu' 
 
+# Download the tomcat tarball onto the server.  tom-url is specified above
     - name: Download Tomcat Tar Ball/Binaries
       get_url:
         url: "{{tom_url}}"
@@ -28,6 +30,7 @@
         name: tomcat
         state: present
 
+# create this user. The home directory below will be created automatically. /usr/local/tomcat8
     - name: Add tomcat user
       user:
         name: tomcat
@@ -39,6 +42,8 @@
         path: /tmp/tomcat8
         state: directory
 
+# extract the tarball into the home directory.  When unacrchive tomcat tarball the directory can be anything
+# store the location into the variable unarchive_info
     - name: Extract tomcat
       unarchive:
         src: /tmp/tomcat-8.tar.gz
@@ -47,15 +52,20 @@
         list_files: yes
       register: unarchive_info
 
+# extract files list item first
     - debug:
         msg: "{{unarchive_info.files[0].split('/')[0]}}"
 
+# this will get us the installatoin driectory of the tomcat /tmp/tomcat/<whatever it is>
+# all the installation files will get copied into the /usr/local/tomcat8/ home directory
+# wherever the playbook is getting executed inventory_hostname will be the hostname on target machine
     - name: Synchronize /tmp/tomcat8/tomcat_cont /usr/local/tomcat8.
       synchronize:
         src: "/tmp/tomcat8/{{unarchive_info.files[0].split('/')[0]}}/"
         dest: /usr/local/tomcat8/
       delegate_to: "{{ inventory_hostname }}"
 
+# tomcat binaries are present now in /usr/local/tomcat8
     - name: Change ownership of /usr/local/tomcat8
       file:
         path: /usr/local/tomcat8
@@ -63,6 +73,8 @@
         group: tomcat
         recurse: yes
 
+# template deployment. These are the templates reviewed earlier.
+# On centos7 can manage it with systemctl command
     - name: Setup tomcat SVC file on Centos 7
       template:
          src: templates/epel7-svcfile.j2
@@ -70,6 +82,7 @@
          mode: "a+x"
       when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '7'      
 
+# centoos6 uses init shell script
     - name: Setup tomcat SVC file on Centos 6
       template:
          src: templates/epel6-svcfile.j2
@@ -77,6 +90,7 @@
          mode: "a+x"
       when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '6'
 
+# ubuntu less that 16 then init.d
     - name: Setup tomcat SVC file on ubuntu 14/15
       template:
          src: templates/ubuntu14_15-svcfile.j2
@@ -84,6 +98,7 @@
          mode: "a+x"
       when: ansible_distribution == 'Ubuntu' and ansible_distribution_major_version < '16'
 
+# ubuntu 16 or higher deploy this template. The EC2 instance for this project is on ubuntu20
     - name: Setup tomcat SVC file on ubuntu 16 and 18
       template:
          src: templates/ubuntu16-svcfile.j2
@@ -99,11 +114,13 @@
       command: chkconfig --add tomcat
       when: ansible_distribution == 'CentOS' and ansible_distribution_major_version == '6'
 
+# centos7 or ubuntu16 or higher
     - name: just force systemd to reread configs (2.4 and above)
       systemd:
         daemon_reload: yes 
       when: ansible_distribution_major_version > '6' or ansible_distribution_major_version > '15'
 
+# start the tomcat service.   The service module can now be used to start the service with the above being done.
     - name: Start & Enable TOmcat 8
       service:
         name: tomcat
