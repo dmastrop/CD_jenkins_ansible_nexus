@@ -246,7 +246,7 @@ pipeline {
 
                         parameters([
                             string(
-                                defaultValue: ''.
+                                defaultValue: '',
                                 name: 'BUILD',
                             ),
                             string(
