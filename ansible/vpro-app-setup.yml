@@ -2,9 +2,14 @@
 - name: Setup Tomcat8 & Deploy Artifact
   hosts: appsrvgrp
   become: yes
+  # timestamp used to take backup of existing artifact everytime run playbook
   vars:
     timestamp: "{{ansible_date_time.date}}_{{ansible_date_time.hour}}_{{ansible_date_time.minute}}"
   tasks:
+  # download latest .war artifact from nexus repo 
+  # the format url needs to be passed from jenkins to nexus server so that this can get the latest .war
+  # right now the format is not correct (from ci-jenkins branch)
+  # once download the artifact will register it to variable wardeploy
     - name: Download latest VProfile.war from nexus
       get_url:
         url: "http://{{USER}}:{{PASS}}@{{nexusip}}:8081/repository/{{reponame}}/{{groupid}}/{{artifactid}}/{{build}}-{{time}}/{{vprofile_version}}"
@@ -13,6 +18,7 @@
       tags:
        - deploy
 
+# stats of the current artifact.  Take the backup if it exists
     - stat:
         path: /usr/local/tomcat8/webapps/ROOT
       register: artifact_stat
@@ -26,6 +32,10 @@
       tags:
        - deploy
 
+# this can fail. So there must be a rollback strategy.  This is the main deploy block
+# the /opt/ROOT dest path below is a backup of the archived original .war version file.
+# Do this only if stats exist for the file (this means that the file exists). If there are no stats
+# then no backup because file is not there.
     - name: Try Backup and Deploy
       block:
       - name: Archive ROOT dir with timestamp
@@ -37,11 +47,13 @@
         tags:
          - deploy
 
+# backup of the archived file in case corruption
       - name: copy ROOT dir with old_ROOT name
         shell: cp -r ROOT old_ROOT
         args:
           chdir: /usr/local/tomcat8/webapps/
 
+# delete teh current artifact. They are backed up already.
       - name: Delete current artifact
         file:
           path: "{{item}}"
@@ -53,6 +65,9 @@
         tags:
          - deploy
 
+# deploy the new artifact. /tmp/vproapp is the new artifact, done in the first task above
+# put this in current working directory /usr/local/tomcat8
+# If this fails roll back to the backup artifact from above
       - name: Try deploy artifact else restore from previos old_ROOT
         block:
          - name: Deploy vprofile artifact
@@ -67,13 +82,17 @@
           - shell: cp -r old_ROOT ROOT
             args:
               chdir: /usr/local/tomcat8/webapps/
+# end main deploy block
 
+
+# if anything fails in the main deploy block, start the tomcat service again.
       rescue:
        - name: Start tomcat svc
          service:
           name: tomcat
           state: started
 
+# if everything works, start tomcat
     - name: Start tomcat svc
       service:
         name: tomcat
@@ -98,6 +117,8 @@
 #      tags:
 #       - deploy
 
+# the handler is used if application properties here. We will not use this. If application.properties is 
+# not built then do the above commented out block.
   handlers:
    - name: Restart Tomcat
      service:

@@ -52,6 +52,11 @@ pipeline {
         // Manage Jenkins Tools: this references the scanner version, etc....
         SONARSCANNER = 'sonarscanner'
 
+        // add NEXUSPASS for nexus password used in the ansible stage below
+        // nexuslogin is both username and password and cannot use that.
+        // added secret called nexuspass to Jenkins secrets
+        NEXUSPASS = credentials('nexuspass')
+
 
     }
 
@@ -146,6 +151,9 @@ pipeline {
             }
         }
 
+
+
+
         stage("UploadArtifact"){
             steps{
                 // the plugin info follows. Note that a parenthesis is used to hold the plugin arguments.
@@ -179,9 +187,63 @@ pipeline {
                 // nnexusArtifactUploader block end
             }
             //steps end block
-
         }
         // stage UploadArtifact end block
+
+
+
+
+        // Insert ansible deploy to staging block here
+        // https://www.jenkins.io/doc/pipeline/steps/ansible/
+        // https://plugins.jenkins.io/ansible/
+
+        // stage.inventory has private route53 dns name for the app01staging tomcat server
+        // site.yml has the playbook list
+        // credentialsId is SSH login credentials for the app01staging app server.  For me this is apploginfromansiblessh
+        
+        // from the vpro-app-setup.yml playbook the nexus URL is based on Nexus repository URL:
+        // url: "http://{{USER}}:{{PASS}}@{{nexusip}}:8081/repository/{{reponame}}/{{groupid}}/{{artifactid}}/{{build}}-{{time}}/{{vprofile_version}}"
+        // this is the BUILD_TIMESTAMP plugin format in Jenkins yy-MM-dd_HHmm
+        // we need to be consistent with that.
+        
+        // QA/vproapp/1-24-04-22_2148/vproapp-1-24-04-22_2148.war is the Nexus URL on my setup 
+        // groupid is QA; artifactid is vproapp
+        // build-time is 1-24-04-22_2148 and vprofile_version is vproapp-1-24-04-22_2148.war
+        // the reponame is vprofile-release
+        // All of these values have to be passed into the playbook vpro-app-setup.yml (ansible/site.yml has both playbooks) from here
+        // so that ansible can download the artifact from Nexus vprofile-release repo.
+    
+
+        // NEXUSPASS is a new secret must define on Jenkins
+        
+        stage('Ansible Deploy to staging'){
+            steps {
+                ansiblePlaybook([
+                inventory   : 'ansible/stage.inventory',
+                playbook    : 'ansible/site.yml',
+                installation: 'ansible',
+                colorized   : true,
+			    credentialsId: 'apploginfromansiblessh',
+			    disableHostKeyChecking: true,
+
+                extraVars   : [
+                   	USER: "admin",
+                    PASS: "${NEXUSPASS}",
+			        nexusip: "172.31.52.38",
+			        reponame: "vprofile-release",
+			        groupid: "QA",
+			        time: "${env.BUILD_TIMESTAMP}",
+			        build: "${env.BUILD_ID}",
+                    artifactid: "vproapp",
+			        vprofile_version: "vproapp-${env.BUILD_ID}-${env.BUILD_TIMESTAMP}.war"
+                ]
+
+             ])
+            }
+            //steps end block
+        }
+        // stage Ansible deploy end block
+
 
 
     // stages block end
