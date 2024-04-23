@@ -213,7 +213,6 @@ pipeline {
         // All of these values have to be passed into the playbook vpro-app-setup.yml (ansible/site.yml has both playbooks) from here
         // so that ansible can download the artifact from Nexus vprofile-release repo.
     
-
         // NEXUSPASS is a new secret must define on Jenkins
         
         stage('Ansible Deploy to staging'){
