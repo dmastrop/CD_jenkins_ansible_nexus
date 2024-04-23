@@ -1,3 +1,9 @@
+// this is the production Jenkinsfile in cd-ansible-prod-project18
+// the staging Jenkinsfile is in the cd-ansible-project18 branch
+// for prodution we do not need to rebuild, assuming that the QA/integration, etc testing on staging server went ok.
+
+
+
 //COLOR_MAP for the post stages at the bottom
 // If SUCCESS then good which is green in slack app
 // If FAILURE then danger which is red in slack app
@@ -12,185 +18,248 @@ def COLOR_MAP = [
 pipeline {
     agent any
     //run directly on Jenkins server without any agent for now
-    // test commit8
-    tools {
-        maven "MAVEN3_9"
-        // there are 2 maven versions in tools. One installed via ssh terminal is MAVEN3_6
-        // MAVEN3_9 is auto installed from the Java Tools configuration
-        jdk "OracleJDK11"
-        // JDK8 is deprecated. Do not use it. 
-    }
+
+
+// tools are not required in the production Jenkinsfile.
+
+    // tools {
+    //     maven "MAVEN3_9"
+    //     // there are 2 maven versions in tools. One installed via ssh terminal is MAVEN3_6
+    //     // MAVEN3_9 is auto installed from the Java Tools configuration
+    //     jdk "OracleJDK11"
+    //     // JDK8 is deprecated. Do not use it. 
+    // }
+
+
+// For production Jenkinsfile we do not need most of the env vars below. Just teh NEXUSPASS is required for
+// the ansible production stage
 
     // the environment block is used to specify the variable values that are referenced in the pom.xml and settings.xml
     // the pom.xml will be used by maven to build from the source. The settings will define the Nexus repo URL that the
     // pom.xml needs to access the central reposistory for the dependencies.....
     environment {
-        //Nexus server environment:
-        // these values were defined during Nexus server setup
-        // note that underscore for variable names instead of dash. Dash is illegal character for Jenkinsfile.
-        SNAP_REPO = 'vprofile-snapshot'
-        NEXUS_USER = 'admin'
-        NEXUS_PASS = 'admin'
-        //NEXUS_PASSWORD = 'admin'
-        //NEXUS_USER = "admin"
-        //NEXUS_PASSWORD = "admin"
-        RELEASE_REPO = 'vprofile-release'
-        CENTRAL_REPO = 'vpro-maven-central'
-        // note that NEXUSIP is the private IP of the Nexus EC2 instance. This does not change even after reboots,
-        // unlike public IP.  Jenkins server and Nexus server are in the same AWS VPC and in same subnet
-        //NEXUSIP = '172.31.28.191'
-        NEXUSIP = '172.31.52.38'
-        NEXUSPORT = '8081'
-        NEXUS_GRP_REPO = 'vpro-maven-group'
-        // the NEXUS_LOGIN was defined in the Jenkins credentials settings. This will be used later for the 
-        // artifact uploader stage at the bottom.  THis nexuslogin is defined in Manage Jenkins Credentials
-        NEXUS_LOGIN = 'nexuslogin'
+        // //Nexus server environment:
+        // // these values were defined during Nexus server setup
+        // // note that underscore for variable names instead of dash. Dash is illegal character for Jenkinsfile.
+        
+        // SNAP_REPO = 'vprofile-snapshot'
+        // NEXUS_USER = 'admin'
+        // NEXUS_PASS = 'admin'
+        
+        // //NEXUS_PASSWORD = 'admin'
+        // //NEXUS_USER = "admin"
+        // //NEXUS_PASSWORD = "admin"
+        
+        // RELEASE_REPO = 'vprofile-release'
+        // CENTRAL_REPO = 'vpro-maven-central'
+        
+        // // note that NEXUSIP is the private IP of the Nexus EC2 instance. This does not change even after reboots,
+        // // unlike public IP.  Jenkins server and Nexus server are in the same AWS VPC and in same subnet
+        // //NEXUSIP = '172.31.28.191'
+        
+        // NEXUSIP = '172.31.52.38'
+        // NEXUSPORT = '8081'
+        // NEXUS_GRP_REPO = 'vpro-maven-group'
+        
+        // // the NEXUS_LOGIN was defined in the Jenkins credentials settings. This will be used later for the 
+        // // artifact uploader stage at the bottom.  THis nexuslogin is defined in Manage Jenkins Credentials
+        // NEXUS_LOGIN = 'nexuslogin'
 
-        //sonarqube environment:
-        // Manage Jenkins System: this references the server ip, token, etc....
-        SONARSERVER = 'sonarserver'
-        // Manage Jenkins Tools: this references the scanner version, etc....
-        SONARSCANNER = 'sonarscanner'
+        // //sonarqube environment:
+        // // Manage Jenkins System: this references the server ip, token, etc....
+        // SONARSERVER = 'sonarserver'
+        // // Manage Jenkins Tools: this references the scanner version, etc....
+        // SONARSCANNER = 'sonarscanner'
 
         // add NEXUSPASS for nexus password used in the ansible stage below
         // nexuslogin is both username and password and cannot use that.
-        // added secret called nexuspass to Jenkins secrets
+        // added secret called nexuspass to Jenkins secrets. This is so that the Jenkins/ansible server can log into the 
+        // Nexus server to fetch the latest artifact on vprofile-release repo.
         NEXUSPASS = credentials('nexuspass')
 
 
     }
 
+
+
+
+
+
+// for the production Jenkinsfile remove the Build stage, Test stage, Checkstyle stage, Sonar stage, QG stage, 
+// and Upload artifact stage
+
     stages {
-        stage('Build') {
-            steps {
-                sh 'mvn -s settings.xml -DskipTests install'
-                // -DskipTests so it will not run any tests. It will run mvn install.  The settings.xml will be
-                // passed to it as parameters.  Settings.xml is in this same workspace 
-                // We want Jenkins to download dependencies from Nexus. That is specified in the pom.xml file in 
-                // this workspace.  The Nexus repo is specified at the  end of the pom.xml
-            }
+        // stage('Build') {
+        //     steps {
+        //         sh 'mvn -s settings.xml -DskipTests install'
+        //         // -DskipTests so it will not run any tests. It will run mvn install.  The settings.xml will be
+        //         // passed to it as parameters.  Settings.xml is in this same workspace 
+        //         // We want Jenkins to download dependencies from Nexus. That is specified in the pom.xml file in 
+        //         // this workspace.  The Nexus repo is specified at the  end of the pom.xml
+        //     }
 
-            post {
-                success {
-                    echo "Now Archiving."
-                    archiveArtifacts artifacts: '**/*.war'
-                    //archiveArtifacts is a pliugin.  This states to archive everyting that ends in .war.
-                    //  our .war file is in the workspace for the particular jenkins pipeline
-                    // in the terminal is is under /var/lib/jenkins/workspace/vprofile-hkhcoder-ci-pipeline2/target
-                }
-            }
-        }
+        //     post {
+        //         success {
+        //             echo "Now Archiving."
+        //             archiveArtifacts artifacts: '**/*.war'
+        //             //archiveArtifacts is a pliugin.  This states to archive everyting that ends in .war.
+        //             //  our .war file is in the workspace for the particular jenkins pipeline
+        //             // in the terminal is is under /var/lib/jenkins/workspace/vprofile-hkhcoder-ci-pipeline2/target
+        //         }
+        //     }
+        // }
 
-        stage('Test'){
-            steps {
-                //sh 'mvn test'
-                sh 'mvn -s settings.xml test'
-                // this will generate a test. Later on we will configure this to place it on Sonarqube
-                // note if do not add -s settings.xml then dependencies will be downloaded from maven instead
-                // of Nexus repo.
-            }
-        }    
+        // stage('Test'){
+        //     steps {
+        //         //sh 'mvn test'
+        //         sh 'mvn -s settings.xml test'
+        //         // this will generate a test. Later on we will configure this to place it on Sonarqube
+        //         // note if do not add -s settings.xml then dependencies will be downloaded from maven instead
+        //         // of Nexus repo.
+        //     }
+        // }    
 
-        stage('Checkstyle Analysis'){
-            steps {
-                //sh 'mvn checkstyle:checkstyple'
-                sh 'mvn -s settings.xml checkstyle:checkstyle'
-                // uses checkstyple code analysis and suggest best practices and vulnerabilities.
-                // note if do not add -s settings.xml then dependencies will be downloaded from maven instead
-                //of Nexus repo.
-            }
-        }
+        // stage('Checkstyle Analysis'){
+        //     steps {
+        //         //sh 'mvn checkstyle:checkstyple'
+        //         sh 'mvn -s settings.xml checkstyle:checkstyle'
+        //         // uses checkstyple code analysis and suggest best practices and vulnerabilities.
+        //         // note if do not add -s settings.xml then dependencies will be downloaded from maven instead
+        //         //of Nexus repo.
+        //     }
+        // }
 
-        stage('SonarAnalysis') {
-            environment {   
-                scannerHome = tool "${SONARSCANNER}"
-                // scannerHome is used as a local varaible here witin this stage. See below.
-            }
-            steps {
-                // the source directory src is the directory that it will scan
-                // project key is vprofile, project name is vprofile (This will appear in the sonarqube server)
-                // all of these paths and files are in the source code in the github repo
+        // stage('SonarAnalysis') {
+        //     environment {   
+        //         scannerHome = tool "${SONARSCANNER}"
+        //         // scannerHome is used as a local varaible here witin this stage. See below.
+        //     }
+        //     steps {
+        //         // the source directory src is the directory that it will scan
+        //         // project key is vprofile, project name is vprofile (This will appear in the sonarqube server)
+        //         // all of these paths and files are in the source code in the github repo
 
-                // sonar-analysis-properties.txt:
+        //         // sonar-analysis-properties.txt:
                 
-                //sonar.projectKey=vprofile
-                //sonar.projectName=vprofile-repo
-                //sonar.projectVersion=1.0
-                //sonar.sources=src/
-                //sonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/
-                //sonar.junit.reportsPath=target/surefire-reports/
-                //sonar.jacoco.reportsPath=target/jacoco.exec
-                //sonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
+        //         //sonar.projectKey=vprofile
+        //         //sonar.projectName=vprofile-repo
+        //         //sonar.projectVersion=1.0
+        //         //sonar.sources=src/
+        //         //sonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/
+        //         //sonar.junit.reportsPath=target/surefire-reports/
+        //         //sonar.jacoco.reportsPath=target/jacoco.exec
+        //         //sonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
                 
-                withSonarQubeEnv("${SONARSERVER}") {
-                   sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
-                   -Dsonar.projectName=vprofile \
-                   -Dsonar.projectVersion=1.0 \
-                   -Dsonar.sources=src/ \
-                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
-                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
-                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
-              }
-            }
-        }
+        //         withSonarQubeEnv("${SONARSERVER}") {
+        //            sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+        //            -Dsonar.projectName=vprofile \
+        //            -Dsonar.projectVersion=1.0 \
+        //            -Dsonar.sources=src/ \
+        //            -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+        //            -Dsonar.junit.reportsPath=target/surefire-reports/ \
+        //            -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+        //            -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+        //       }
+        //     }
+        // }
     
 
-        stage("Quality Gate") {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    // timeout after 1 hour if the plugin below does not respond
+        // stage("Quality Gate") {
+        //     steps {
+        //         timeout(time: 1, unit: 'HOURS') {
+        //             // timeout after 1 hour if the plugin below does not respond
 
-                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
-                    // true = set pipeline to UNSTABLE, false = don't
-                    // Quality Gate for this vprofile project is vprofileQG
-                    // the sonarqubetojenkins webhook is http://172.31.25.39:8080/sonarqube-webhook and has been
-                    // atached to the vprofile project in sonarqube.
-                    waitForQualityGate abortPipeline: true
+        //             // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+        //             // true = set pipeline to UNSTABLE, false = don't
+        //             // Quality Gate for this vprofile project is vprofileQG
+        //             // the sonarqubetojenkins webhook is http://172.31.25.39:8080/sonarqube-webhook and has been
+        //             // atached to the vprofile project in sonarqube.
+        //             waitForQualityGate abortPipeline: true
+        //         }
+        //     }
+        // }
+
+
+
+
+        // stage("UploadArtifact"){
+        //     steps{
+        //         // the plugin info follows. Note that a parenthesis is used to hold the plugin arguments.
+        //         // groupId will create a folder and put the artifact inside of this folder
+        //         // BUILD_ID and BUILD_TIMESTAMP are Jenkins env variables. The BUILD_TIMESTAMP uses the timestamp plugin
+        //         // in which syntax is defined to build the timestamp. THese are referenced as env.BUILD and env.BUILD_TIMESTAMP
+        //         // The BUILD_ID is the pipeline job number as shown in the Web admin GUI.
+        //         // repository is where artifact will be stored. This is vprofile-release
+        //         // In artifacts are the list of arguments. The prefix of the artifact will be vproapp.  The file is in the
+        //         // target directory of the workspace in Jenkins.  var/lib/jenkins/workspace/vprofile-hkhcoder-ci-pipeline2/target
+        //         // The full name will be: vproapp-BUILD_ID-BUILD_TIMESTAMP.war
+
+        //         // NOTE: as arguments to the plugin note the use of double quotes for all interopolated values, i.e.
+        //         // "${interopolation_variable}"
+
+        //         nexusArtifactUploader(
+        //           nexusVersion: 'nexus3',
+        //           protocol: 'http',
+        //           nexusUrl: "${NEXUSIP}:${NEXUSPORT}",
+        //           groupId: 'QA',
+        //           version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+        //           repository: "${RELEASE_REPO}",
+        //           credentialsId: "${NEXUS_LOGIN}",
+        //           artifacts: [
+        //             [artifactId: 'vproapp',
+        //              classifier: '',
+        //              file: 'target/vprofile-v2.war',
+        //              type: 'war']
+        //           ]
+        //         )
+        //         // nnexusArtifactUploader block end
+        //     }
+        //     //steps end block
+        // }
+        // // stage UploadArtifact end block
+
+
+
+
+
+
+// For this PRODUCTION Jenkinsfile need to update the Ansible stage below with the correct parameters
+// credentialsId is app01prodsshkey
+// rename stage.inventory to prod.inventory
+
+// NOTE that the nexus artifact is the same one from the staging. This is ok assuming that QA tests have passed with the build
+// The problem here is that BUILD_TIMESTAMP and BUILD_ID will be different because this is a new pipeline
+// we need to parameterize these two env vars with the values from the staging pipeline.
+// See below: create two new env vars for the BUILD_TIMESTAMP and BUILD_ID called TIME and BUILD.
+// These values will be from the user input.
+
+// Need to insert a stage for this user input BEFORE the ansible stage
+// When running this pipeline the pipeline will prompt user to input these.
+// In nexus the .war build syntax is vproapp-6-24-04-23_1813.war for example with 
+// BUILD = 6 and TIME=24-04-23_1813 for example
+
+        stage('Setup parameters') {
+            steps {
+                script {
+
+                    properties ([
+
+                        parameters([
+                            string(
+                                defaultValue: ''.
+                                name: 'BUILD',
+                            ),
+                            string(
+                                defaultValue: '',
+                                name: 'TIME',
+                            )
+                        ])
+
+                    ])
+
                 }
             }
         }
-
-
-
-
-        stage("UploadArtifact"){
-            steps{
-                // the plugin info follows. Note that a parenthesis is used to hold the plugin arguments.
-                // groupId will create a folder and put the artifact inside of this folder
-                // BUILD_ID and BUILD_TIMESTAMP are Jenkins env variables. The BUILD_TIMESTAMP uses the timestamp plugin
-                // in which syntax is defined to build the timestamp. THese are referenced as env.BUILD and env.BUILD_TIMESTAMP
-                // The BUILD_ID is the pipeline job number as shown in the Web admin GUI.
-                // repository is where artifact will be stored. This is vprofile-release
-                // In artifacts are the list of arguments. The prefix of the artifact will be vproapp.  The file is in the
-                // target directory of the workspace in Jenkins.  var/lib/jenkins/workspace/vprofile-hkhcoder-ci-pipeline2/target
-                // The full name will be: vproapp-BUILD_ID-BUILD_TIMESTAMP.war
-
-                // NOTE: as arguments to the plugin note the use of double quotes for all interopolated values, i.e.
-                // "${interopolation_variable}"
-
-                nexusArtifactUploader(
-                  nexusVersion: 'nexus3',
-                  protocol: 'http',
-                  nexusUrl: "${NEXUSIP}:${NEXUSPORT}",
-                  groupId: 'QA',
-                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
-                  repository: "${RELEASE_REPO}",
-                  credentialsId: "${NEXUS_LOGIN}",
-                  artifacts: [
-                    [artifactId: 'vproapp',
-                     classifier: '',
-                     file: 'target/vprofile-v2.war',
-                     type: 'war']
-                  ]
-                )
-                // nnexusArtifactUploader block end
-            }
-            //steps end block
-        }
-        // stage UploadArtifact end block
-
-
 
 
         // Insert ansible deploy to staging block here
@@ -215,14 +284,15 @@ pipeline {
     
         // NEXUSPASS is a new secret must define on Jenkins
         
-        stage('Ansible Deploy to staging'){
+        stage('Ansible Deploy to PRODUCTION'){
             steps {
                 ansiblePlaybook([
-                inventory   : 'ansible/stage.inventory',
+                //inventory   : 'ansible/stage.inventory',
+                inventory   : 'ansible/prod.inventory',
                 playbook    : 'ansible/site.yml',
                 installation: 'ansible',
                 colorized   : true,
-			    credentialsId: 'apploginfromansiblessh',
+			    credentialsId: 'app01prodsshkey',
 			    disableHostKeyChecking: true,
 
                 extraVars   : [
@@ -231,10 +301,13 @@ pipeline {
 			        nexusip: "172.31.52.38",
 			        reponame: "vprofile-release",
 			        groupid: "QA",
-			        time: "${env.BUILD_TIMESTAMP}",
-			        build: "${env.BUILD_ID}",
+			        //time: "${env.BUILD_TIMESTAMP}",
+			        //build: "${env.BUILD_ID}",
+                    time: "${env.TIME}",
+                    build: "${env.BUILD}",
                     artifactid: "vproapp",
-			        vprofile_version: "vproapp-${env.BUILD_ID}-${env.BUILD_TIMESTAMP}.war"
+			        //vprofile_version: "vproapp-${env.BUILD_ID}-${env.BUILD_TIMESTAMP}.war"
+                    vprofile_version: "vproapp-${env.BUILD}-${env.TIME}.war"
                 ]
 
              ])
@@ -271,11 +344,4 @@ pipeline {
 // pipeline block end
 } 
 
-
-
-//test
-//test cd-ansible-project18 branch with CI only for now.
-//testing ansible stage
-// testing ansible stage again after fixing route53 app01staging.vprofile.project18 is the correct host.
-// test prior to production
 
