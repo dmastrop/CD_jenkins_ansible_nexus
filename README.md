@@ -1,18 +1,10 @@
-# Prerequisites
-## test a push from VSCode to the ci-jenkins branch of fork vprofile-project-hkhcoder project
-## test push
-## test push
+# README ci-jenkins is from project8. 
 
-## test push
-## test push from project 10 workspace folder
-# test ci-jenkins
-# test
-# test
-# disk was full causing failure to execute pipeline as build executors brought down due to disk full. Relieving disk space
-# Now try another commit ....
-# test
-# test
-# test
+This is a simple CI pipeline for building the code and doing checkstyle and sonarqube analysis and then uploading the artifact to the nexus repository.
+
+
+# Prerequisites
+
 - JDK 11 
 - Maven 3 
 - MySQL 8
