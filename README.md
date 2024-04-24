@@ -28,7 +28,9 @@ the production artifact.
 NOTE once again that only the frontend of the application stack is deployed in this project. The rest of the
 stock will be deployed by ansible in a later project.
 
-
+NOTE that CD staging branch push will activate the second pipeline in jenkins to deploy artifact to staging
+CD production branch push will nto activate the third pipeline. This is done by using the parameter inputs above, 
+BUILD and TIME to instigate the pipeline and put the artifact onto the production server.....
 
 
 # Prerequisites
