@@ -1,6 +1,7 @@
 # README ci-jenkins is from project8. 
 
 This is a simple CI pipeline for building the code and doing checkstyle and sonarqube analysis and then uploading the artifact to the nexus repository.
+This is basically the project8 jenkinsfile
 
 
 # Prerequisites
