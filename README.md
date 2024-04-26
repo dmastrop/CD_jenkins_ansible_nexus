@@ -1,4 +1,4 @@
-# Deployment to the app01-prod-project8 app server for production deployment
+# Deployment to the app01-prod-project18 app server for production deployment
 
 This is the cd-ansible-prod-project18 branch. The jenkinfile is stripped down and primarily just does a deployment
 to the production app server.
