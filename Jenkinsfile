@@ -21,7 +21,7 @@ pipeline {
         // JDK8 is deprecated. Do not use it. 
     }
 
-#
+
     // the environment block is used to specify the variable values that are referenced in the pom.xml and settings.xml
     // the pom.xml will be used by maven to build from the source. The settings will define the Nexus repo URL that the
     // pom.xml needs to access the central reposistory for the dependencies.....
@@ -211,6 +211,8 @@ pipeline {
 // pipeline block end
 } 
 
+
+//
 
 
 
