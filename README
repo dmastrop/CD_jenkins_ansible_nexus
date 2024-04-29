@@ -1,0 +1,243 @@
+
+
+# Deploying artifact to staging app server app01-staging-project18
+
+The addition to the CI pipeline consists of CD to staging servers. This branch is for ansible deployment to the app01 staging server.
+The branch is cd-ansible-project18.
+
+For ansible, first the templates. There are 4 templates for various versions of RHEL/CentOS and ubuntu depending on version.
+The templates are *.js files, scripts for setting up tomcat on the server. For this project I am using 
+ubuntu20.  This is done through the tomcat_setup.yml
+
+Once tomcat is started on staging application server the next step is to deploy the artifact
+from the CI pipeline (see ci-jenkins branch). Ansible requires several variables to construct the proper URL
+to get the latest version on the vprofile-release nexus repository.
+Ansible deploys the artifact to the tomcat server.  This is done through vpro-app-setup.yml playbook
+
+This project19 is only implementing the front end of the vprofile stack onto the staging app server.
+The rest of the stack will be deployed onto the infra in a later project (using ansbile as well)
+
+The staging app server will be used by the QA team for system, integration, scale, stress, performance, soak and functional testing of the application
+
+Once QA approves the next CD stage to production app server can be done (this is the cd-ansible-prod-project18 branch)
+
+changes in the source code during iterative CI and staging server testing can all be merged into the production branch but the production branch does not build, it just deploys to the prod app server.  The 
+staging branch cd-ansible-project18 is where the code commits should be done because that is where the build artifact is created.
+
+NOTE: the version of the artifact deployed to the staging app server will be whatever latest version is on 
+the repo in Nexus from the CI pipeline.
+
+NOTE: the route53 hosted zone A records for routing to the applicatoin servers (staging and production) are private and have the private
+addresses in them, so there is no need to update them between app server reboots as private IPs do not change on EC2.
+
+
+
+
+
+
+
+
+
+# Deployment to the app01-prod-project18 app server for production deployment
+
+This is the cd-ansible-prod-project18 branch. The jenkinfile is stripped down and primarily just does a deployment
+to the production app server.
+
+This assumes that QA has passed the build. The source code is built from the cd-ansible-project18 staging server branch
+and not this cd-ansible-prod-project18 production branch.
+The jenkinsfile in this production branch uses ansible to deploy the artifact from the staging pipeline to
+the production app server (another EC2 instance)
+
+The key difference between this third pipeline on the jenkins server and the second pipeline is that this 
+third pipeline has "Build with parameters" in the jenksins file. This is a stage for the user to input the 
+artifact from the staging pipeline that has been approved by QA into the deployment pipeline so that it can be
+deployed to the production app server. 
+
+The env vars are BUILD and TIME and are mapped into the .war file labeling
+For example, the current nexus artifact build from the staging CD pipeline is 10-24-04-24_0147, i.e. BUILD 10
+and TIME 24-04-24_0147
+
+The production pipeline is parameterized so these values need to be inputted and then the pipeline run to put
+the artifact into production (running on the prodcution app server).
+
+The deployment uses ansible again.   The staging.inventory in the staging CD uses route53 internal hostname 
+app01staging.vprofile.project18 to instruct ansible where to deploy the staging artifact.
+The prod.inventory has the route53 app01prod.vprofile.project18 hostname to instruct ansible where to deploy
+the production artifact.
+
+NOTE: once again that only the frontend of the application stack is deployed in this project. The rest of the
+stack will be deployed by ansible in a later project.
+
+NOTE: that CD staging branch push will activate the second pipeline in jenkins to deploy artifact to staging app server.
+A CD production branch push will nto activate the third pipeline. This is done by using the parameter inputs above, 
+BUILD and TIME to instigate the pipeline and put the artifact onto the production server.....
+
+NOTE: the route53 hosted zone A records for routing to the applicatoin servers (staging and production) are private and have the private
+addresses in them, so there is no need to update them between app server reboots as private IPs do not change on EC2.
+
+
+
+
+
+
+# Testing full CI/CD flow with merge from stage to production branch:
+
+To resolve merge conflicts when merging stage to production branches, I will create a Jenkinsfile.stage and Jenkinsfile.prod in both branches
+Pipeline 2 for staging in Jenkins: change the path to point to Jenkinsfile.stage
+Pipeline 2 for production in Jenkins: change the path to point to the Jenkinsfile.prod
+Create a master README file common to both branches
+put the stage.inventory and the prod.inventory files in both branches
+
+
+
+git checkout stage
+git push origin stage
+git checkout production
+git merge stage
+git push origin production
+
+Then for this project since prod pipeline is parameterized put the BUILD and TIME into the fields and start the prouction pipeline3
+to deploy to the production app server
+
+
+
+
+
+
+
+
+# Staging and production app server EC2 instance configurations and Jenkins configuration:
+
+These servers must be configured in a specific fashion for this project to work.
+
+hese are tomcat servers. The port 8080 will be used to access the application and test it once it is deployed to the server
+
+Security groups in AWS have to allow PC to SSH for administration and HTTP to port 8080 from the PC to test the app in the browser
+
+Jenkins needs access to the app server so security group from Jenkins SG inbound for SSH needs to be added to app server SG
+Note that ansible will deploy tomcat onto the app server (see the script files).  So Jenkins does not need to do this.
+
+The SSH key that was created for each app server needs to be added in Jenkins credentials. Ansible is installed on Jenkins server and this will
+permit ansible to administer and provision the app sever from Jenkins/ansible to app sevver on SSH
+Add the private pem key as SSH with private key pasted in.
+
+Install ansible on the Jenkins server$ sudo apt update
+$ sudo apt install software-properties-common
+$ sudo add-apt-repository --yes --update ppa:ansible/ansible
+$ sudo apt install ansible
+
+Add the ansible plugin to Jenkins configuration
+
+
+
+
+
+
+# Ansible deployment to app servers
+
+In general this uses the site.yml to get the playbooks. There are two playbooks
+- import_playbook: tomcat_setup.yml
+- import_playbook: vpro-app-setup.yml 
+
+tomcat_setup.yml sets up tomcat on the app server. Ths yml relies on several template files to accommodate various versions of CentOS
+and ubuntu.
+The tomcat_setup.yml then installs JDK and configures the tomcat server so that it is ready to accept the .war file (vprofile app) from the earlier CI pipeline
+The vpro-app-setup.yml, the second playbook, gets the latest passed artifact from the earlier CI stages in the pipeline from the Nexus repository (server) and deploys
+it to the tomcat server. There are several rollback conditions in case the app install fails, to prevent a complete outage on the app server.
+
+The stage.inventory and the prod.inventory files have the route53 private hosted zone names for the staging and production app servers so that ansible knows where the servers are on 
+the private address space.
+
+NOTE: need to add inbound access from the app server to the Nexus server in AWS, for the Nexus security group.
+The app server is downloading the latest passed artifact from the Nexus server and not from the Jenkins server.
+
+
+
+The relevant stage added to the Jenkinsfile for the staging pipeline is below
+The credentialsId is the SSH private key in Jenkins credentials for the staging server access.
+
+stage('Ansible Deploy to staging'){
+            steps {
+                ansiblePlaybook([
+                inventory   : 'ansible/stage.inventory',
+                playbook    : 'ansible/site.yml',
+                installation: 'ansible',
+                colorized   : true,
+                credentialsId: 'apploginfromansiblessh',
+                disableHostKeyChecking: true,
+
+                extraVars   : [
+                    USER: "admin",
+                    PASS: "${NEXUSPASS}",
+                    nexusip: "172.31.52.38",
+                    reponame: "vprofile-release",
+                    groupid: "QA",
+                    time: "${env.BUILD_TIMESTAMP}",
+                    build: "${env.BUILD_ID}",
+                    artifactid: "vproapp",
+                    vprofile_version: "vproapp-${env.BUILD_ID}-${env.BUILD_TIMESTAMP}.war"
+                    ]
+
+             ])
+            }
+            //steps end block
+
+
+
+
+The relevant stage added to the Jenkinsfile for the production pipeline is below
+The credentialsId is the SSH private key in Jenkins credentials for the production server access.
+
+stage('Ansible Deploy to PRODUCTION'){
+            steps {
+                ansiblePlaybook([
+                //inventory   : 'ansible/stage.inventory',
+                inventory   : 'ansible/prod.inventory',
+                playbook    : 'ansible/site.yml',
+                installation: 'ansible',
+                colorized   : true,
+			    credentialsId: 'app01prodsshkey',
+			    disableHostKeyChecking: true,
+
+                extraVars   : [
+                   	USER: "admin",
+                    PASS: "${NEXUSPASS}",
+			        nexusip: "172.31.52.38",
+			        reponame: "vprofile-release",
+			        groupid: "QA",
+			        //time: "${env.BUILD_TIMESTAMP}",
+			        //build: "${env.BUILD_ID}",
+                    time: "${env.TIME}",
+                    build: "${env.BUILD}",
+                    artifactid: "vproapp",
+			        //vprofile_version: "vproapp-${env.BUILD_ID}-${env.BUILD_TIMESTAMP}.war"
+                    vprofile_version: "vproapp-${env.BUILD}-${env.TIME}.war"
+                ]
+
+             ])
+            }
+            //steps end block
+
+
+As noted above, the production pipeline is not triggered by git push but is parameterized with BUILD and TIME from
+the staging pipeline
+
+stage('Setup parameters') {
+            steps {
+                script {
+
+                    properties ([
+
+                        parameters([
+                            string(
+                                defaultValue: '',
+                                name: 'BUILD',
+                            ),
+                            string(
+                                defaultValue: '',
+                                name: 'TIME',
+                            )
+
+
+# NOTE that browser should be directed to public_ip_of_app_server:8080 for this project, to test the app out.
+Adding selenium to automate this is WIP
