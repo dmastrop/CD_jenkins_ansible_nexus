@@ -241,3 +241,16 @@ stage('Setup parameters') {
 
 # NOTE that browser should be directed to public_ip_of_app_server:8080 for this project, to test the app out.
 Adding selenium to automate this is WIP
+
+
+# add some code for the parametarized versions that are used in production deployment to the slack message. This works well.
+
+post {
+        always {
+            echo 'Slack Notifications.'
+            //slackSend channel: '#jenkinscicd2',
+            slackSend channel: '#cd-devops',
+                color: COLOR_MAP[currentBuild.currentResult],
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL} \n Parameterized staged build: ${env.BUILD} and Parameterized staged time: ${env.TIME} \n Deployed staged build to production: vproapp-${env.BUILD}-${env.TIME}.war"
+        }
+    }
