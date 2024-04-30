@@ -121,6 +121,8 @@ pipeline {
                 //sonar.junit.reportsPath=target/surefire-reports/
                 //sonar.jacoco.reportsPath=target/jacoco.exec
                 //sonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
+
+                //-Dsonar.nodejs.executable=/home/ubuntu/v16.20.0/bin/node \
                 
                 withSonarQubeEnv("${SONARSERVER}") {
                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
@@ -131,7 +133,7 @@ pipeline {
                    -Dsonar.junit.reportsPath=target/surefire-reports/ \
                    -Dsonar.jacoco.reportsPath=target/jacoco.exec \
                    -Dsonar.nodejs.executable=/usr/bin/node \
-                   -Dsonar.nodejs.executable=/home/ubuntu/v16.20.0/bin/node \
+                   
                    -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml''' 
                   
 
