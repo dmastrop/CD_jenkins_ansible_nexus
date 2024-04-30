@@ -291,3 +291,4 @@ pipeline {
 // try /usr/bin/nodejs
 // test
 //  problems with slack notifications now.
+//test log recorder for slack issue
