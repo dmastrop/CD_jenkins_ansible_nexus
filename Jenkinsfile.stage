@@ -277,18 +277,4 @@ pipeline {
 
 
 
-//test
-//test cd-ansible-project18 branch with CI only for now.
-//testing ansible stage
-// testing ansible stage again after fixing route53 app01staging.vprofile.project18 is the correct host.
-// test prior to production
-// test the whole staging and prod flow. First stage to app01 staging on this cd-ansible-project18 branch.
-// test staging pipeline
-//test
-// test for fix on sonarqube server nodejs missing/java exception
-// test for fix on sonarqube nodejs.   Need version 14 with jenkins sonar plugin.
-// test adding sonarqube.properties added sonar.nodejs.executable=/usr/bin/node
-// try /usr/bin/nodejs
-// test
-//  problems with slack notifications now.
-//test log recorder for slack issue
+
