@@ -289,6 +289,4 @@ pipeline {
 // test for fix on sonarqube nodejs.   Need version 14 with jenkins sonar plugin.
 // test adding sonarqube.properties added sonar.nodejs.executable=/usr/bin/node
 // try /usr/bin/nodejs
-// test
-// test
-// test
+
