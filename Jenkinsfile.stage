@@ -290,4 +290,4 @@ pipeline {
 // test adding sonarqube.properties added sonar.nodejs.executable=/usr/bin/node
 // try /usr/bin/nodejs
 // test
-
+//  problems with slack notifications now.
