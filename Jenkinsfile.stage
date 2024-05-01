@@ -273,7 +273,7 @@ pipeline {
             // SLACKTOKEN is secret slacktoken6 in jenkins credentials
             slackSend channel: '#devop23', 
                 failOnError: true, 
-                message: 'Hello Guys', 
+                message: 'Hello Guys'
                 
                       
             
