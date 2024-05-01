@@ -271,6 +271,7 @@ pipeline {
 
             //slackSend channel: '#devop23', failOnError: true, message: 'Hello Guys', tokenCredentialId: 'your credential', teamDomain : 'yourteamDomain'
             // SLACKTOKEN is secret slacktoken6 in jenkins credentials
+            // i have domain workspace and credentials in Jenkins System Slack configuration
             slackSend channel: '#devop23', 
                 failOnError: true, 
                 message: 'Hello Guys'
