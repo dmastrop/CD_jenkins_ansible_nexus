@@ -274,8 +274,7 @@ pipeline {
             slackSend channel: '#devop23', 
                 failOnError: true, 
                 message: 'Hello Guys', 
-                tokenCredentialId: 'm7sVMMN4VkrGY23a3h9U8FyB', 
-                teamDomain : 'devops2-co.slack.com'
+                teamDomain : 'devops2-co'
             
             
             
