@@ -202,7 +202,10 @@ pipeline {
         always {
             echo 'Slack Notifications.'
             //slackSend channel: '#jenkinscicd2',
-            slackSend channel: '#cd-devops',
+            //slackSend channel: '#cd-devops',
+
+            // slack issue. Moved from workspace project18-hq to devops2-co. The channel for project18 is #devop23
+            slackSend channel: '#devop23',
                 color: COLOR_MAP[currentBuild.currentResult],
                 message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
         }
