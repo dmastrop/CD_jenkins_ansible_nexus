@@ -274,10 +274,8 @@ pipeline {
             slackSend channel: '#devop23', 
                 failOnError: true, 
                 message: 'Hello Guys', 
-                teamDomain : 'devops2-co'
-            
-            
-            
+                
+                      
             
             //slackSend channel: '#jenkinscicd2',
 
