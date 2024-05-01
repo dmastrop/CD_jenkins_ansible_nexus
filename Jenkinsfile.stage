@@ -58,7 +58,7 @@ pipeline {
         NEXUSPASS = credentials('nexuspass')
 
         // slack token
-        SLACKTOKEN = credentials('slacktoken6')
+        //SLACKTOKEN = credentials('slacktoken6')
 
 
     }
@@ -295,6 +295,7 @@ pipeline {
 } 
 
 
+//
 //
 
 
