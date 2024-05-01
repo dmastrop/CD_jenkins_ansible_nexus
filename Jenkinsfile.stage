@@ -57,6 +57,9 @@ pipeline {
         // added secret called nexuspass to Jenkins secrets
         NEXUSPASS = credentials('nexuspass')
 
+        // slack token
+        SLACKTOKEN = credentials('slacktoken6')
+
 
     }
 
@@ -265,9 +268,26 @@ pipeline {
     post {
         always {
             echo 'Slack Notifications.'
+
+            //slackSend channel: '#devop23', failOnError: true, message: 'Hello Guys', tokenCredentialId: 'your credential', teamDomain : 'yourteamDomain'
+            // SLACKTOKEN is secret slacktoken6 in jenkins credentials
+            `slackSend channel: '#devop23', 
+                failOnError: true, 
+                message: 'Hello Guys', 
+                tokenCredentialId: '${SLACKTOKEN}', 
+                teamDomain : 'devops2-co.slack.com'
+            
+            
+            
+            
             //slackSend channel: '#jenkinscicd2',
+
+            // project18-hq workspace:
             //slackSend channel: '#cd-devops',
-            slackSend channel: '#new-devops-channel-project18',
+            //slackSend channel: '#new-devops-channel-project18',
+
+            // devops2-co workspace
+            slackSend channel: '#devop23',
                 color: COLOR_MAP[currentBuild.currentResult],
                 message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
         }
