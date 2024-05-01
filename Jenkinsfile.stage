@@ -57,6 +57,9 @@ pipeline {
         // added secret called nexuspass to Jenkins secrets
         NEXUSPASS = credentials('nexuspass')
 
+        // slack token
+        //SLACKTOKEN = credentials('slacktoken6')
+
 
     }
 
@@ -121,6 +124,8 @@ pipeline {
                 //sonar.junit.reportsPath=target/surefire-reports/
                 //sonar.jacoco.reportsPath=target/jacoco.exec
                 //sonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
+
+                //-Dsonar.nodejs.executable=/home/ubuntu/v16.20.0/bin/node \
                 
                 withSonarQubeEnv("${SONARSERVER}") {
                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
@@ -130,9 +135,6 @@ pipeline {
                    -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
                    -Dsonar.junit.reportsPath=target/surefire-reports/ \
                    -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                   -Dsonar.nodejs.executable=/usr/bin/node \
-                   -Dsonar.nodejs.executable=/home/ubuntu/node \
-                   -Dsonar.nodejs.executable=/home/ubuntu/node \
                    -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml''' 
                   
 
@@ -266,9 +268,27 @@ pipeline {
     post {
         always {
             echo 'Slack Notifications.'
+
+            //slackSend channel: '#devop23', failOnError: true, message: 'Hello Guys', tokenCredentialId: 'your credential', teamDomain : 'yourteamDomain'
+            // SLACKTOKEN is secret slacktoken6 in jenkins credentials
+            // i have domain workspace and credentials in Jenkins System Slack configuration
+            // Just insert the faiOnError true.
+            // slackSend channel: '#devop23', 
+            //     failOnError: true, 
+            //     message: 'Hello Guys'
+                
+                      
+            
             //slackSend channel: '#jenkinscicd2',
-            slackSend channel: '#cd-devops',
+
+            // project18-hq workspace:
+            //slackSend channel: '#cd-devops',
+            //slackSend channel: '#new-devops-channel-project18',
+
+            // devops2-co workspace
+            slackSend channel: '#devop23',
                 color: COLOR_MAP[currentBuild.currentResult],
+                //failOnError: true, 
                 message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
         }
     }
@@ -277,18 +297,8 @@ pipeline {
 } 
 
 
-
-//test
-//test cd-ansible-project18 branch with CI only for now.
-//testing ansible stage
-// testing ansible stage again after fixing route53 app01staging.vprofile.project18 is the correct host.
-// test prior to production
-// test the whole staging and prod flow. First stage to app01 staging on this cd-ansible-project18 branch.
-// test staging pipeline
-//test
-// test for fix on sonarqube server nodejs missing/java exception
-// test for fix on sonarqube nodejs.   Need version 14 with jenkins sonar plugin.
-// test adding sonarqube.properties added sonar.nodejs.executable=/usr/bin/node
-// try /usr/bin/nodejs
-// test
+//
+//
+//
+// run another test with the jenkins logging
 
