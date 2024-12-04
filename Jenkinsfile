@@ -155,7 +155,11 @@ pipeline {
                     // Quality Gate for this vprofile project is vprofileQG
                     // the sonarqubetojenkins webhook is http://172.31.25.39:8080/sonarqube-webhook and has been
                     // atached to the vprofile project in sonarqube.
-                    waitForQualityGate abortPipeline: true
+                    // add this webhook to sonar1 server for the vprofile project. Otherwise the pipeline will hang.
+		    // Sonar1 needs to know where to report back the QG stats. if there is no webhook the jenkinsfile will
+                    // hang here
+                    
+		    waitForQualityGate abortPipeline: true
                 }
             }
         }
