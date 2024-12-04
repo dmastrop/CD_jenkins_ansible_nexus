@@ -53,10 +53,19 @@ pipeline {
 
         //sonarqube environment:
         // Manage Jenkins System: this references the server ip, token, etc....
-        SONARSERVER = 'sonarserver'
-        // Manage Jenkins Tools: this references the scanner version, etc....
-        SONARSCANNER = 'sonarscanner'
-
+       	//SONARSERVER = 'sonarserver'
+        
+	// Manage Jenkins Tools: this references the scanner version, etc....
+        //SONARSCANNER = 'sonarscanner'
+	
+	// edit this to use the new sonar1 server that has jvm/jdk 17 as I am getting java execption after upgrading jenkins
+	// to jdk17 with the older sonar server
+	SONARSERVER = 'sonarserver1'
+	SONARSCANNER = 'sonarscanner1'
+	// NOTE: in Manage Jenkkins System created a new sonarserver1 with private  ip of sonar1 server
+	// in Manage Jenkins Tools created a new sonarscanner1 with the latest sonar scanner selected. If that does not work
+	// i can try using the next lower version and so on
+	// create a new sonar token (user type?) and used that in the sonarserver1 configuration above
 
     }
 
