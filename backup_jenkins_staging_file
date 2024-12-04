@@ -2,7 +2,7 @@
 // If SUCCESS then good which is green in slack app
 // If FAILURE then danger which is red in slack app
 // Thus we can color code the messages from slack
-//test3
+
 def COLOR_MAP = [
     'SUCCESS': 'good', 
     'FAILURE': 'danger',
@@ -17,14 +17,9 @@ pipeline {
         maven "MAVEN3_9"
         // there are 2 maven versions in tools. One installed via ssh terminal is MAVEN3_6
         // MAVEN3_9 is auto installed from the Java Tools configuration
-
-        // I had to upgrade the jenkins controller (and agent) to OracleJDK17. The tools in Jenkins configuration has been 
-        // modified with the correct path but this needs to be edited as well.
-        // jdk "OracleJDK11"
-        jdk "OracleJDK17"
+        jdk "OracleJDK11"
         // JDK8 is deprecated. Do not use it. 
     }
-
 
     // the environment block is used to specify the variable values that are referenced in the pom.xml and settings.xml
     // the pom.xml will be used by maven to build from the source. The settings will define the Nexus repo URL that the
@@ -53,19 +48,18 @@ pipeline {
 
         //sonarqube environment:
         // Manage Jenkins System: this references the server ip, token, etc....
-        //SONARSERVER = 'sonarserver'
-        
+        SONARSERVER = 'sonarserver'
         // Manage Jenkins Tools: this references the scanner version, etc....
-        //SONARSCANNER = 'sonarscanner'
+        SONARSCANNER = 'sonarscanner'
 
-        // edit this to use the new sonar1 server that has jvm/jdk 17 as I am getting java execption after upgrading jenkins
-        // to jdk17 with the older sonar server
-        SONARSERVER = 'sonarserver1'
-        SONARSCANNER = 'sonarscanner1'
-        // NOTE: in Manage Jenkkins System created a new sonarserver1 with private  ip of sonar1 server
-        // in Manage Jenkins Tools created a new sonarscanner1 with the latest sonar scanner selected. If that does not work
-        // i can try using the next lower version and so on
-        // create a new sonar token (user type?) and used that in the sonarserver1 configuration above
+        // add NEXUSPASS for nexus password used in the ansible stage below
+        // nexuslogin is both username and password and cannot use that.
+        // added secret called nexuspass to Jenkins secrets
+        NEXUSPASS = credentials('nexuspass')
+
+        // slack token
+        //SLACKTOKEN = credentials('slacktoken6')
+
 
     }
 
@@ -130,6 +124,8 @@ pipeline {
                 //sonar.junit.reportsPath=target/surefire-reports/
                 //sonar.jacoco.reportsPath=target/jacoco.exec
                 //sonar.java.checkstyle.reportPaths=target/checkstyle-result.xml
+
+                //-Dsonar.nodejs.executable=/home/ubuntu/v16.20.0/bin/node \
                 
                 withSonarQubeEnv("${SONARSERVER}") {
                    sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
@@ -139,7 +135,9 @@ pipeline {
                    -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
                    -Dsonar.junit.reportsPath=target/surefire-reports/ \
                    -Dsonar.jacoco.reportsPath=target/jacoco.exec \
-                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml''' 
+                  
+
               }
             }
         }
@@ -155,14 +153,13 @@ pipeline {
                     // Quality Gate for this vprofile project is vprofileQG
                     // the sonarqubetojenkins webhook is http://172.31.25.39:8080/sonarqube-webhook and has been
                     // atached to the vprofile project in sonarqube.
-                    // add this webhook to sonar1 server for the vprofile project. Otherwise the pipeline will hang.
-                    // Sonar1 needs to know where to report back the QG stats. if there is no webhook the jenkinsfile will
-                    // hang here
-                    
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
+
+
+
 
         stage("UploadArtifact"){
             steps{
@@ -197,7 +194,6 @@ pipeline {
                 // nnexusArtifactUploader block end
             }
             //steps end block
-
         }
         // stage UploadArtifact end block
 
