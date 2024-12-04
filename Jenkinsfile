@@ -17,7 +17,11 @@ pipeline {
         maven "MAVEN3_9"
         // there are 2 maven versions in tools. One installed via ssh terminal is MAVEN3_6
         // MAVEN3_9 is auto installed from the Java Tools configuration
-        jdk "OracleJDK11"
+
+        // I had to upgrade the jenkins controller (and agent) to OracleJDK17. The tools in Jenkins configuration has been 
+	// modified with the correct path but this needs to be edited as well.
+        // jdk "OracleJDK11"
+	jdk "OracleJDK17"
         // JDK8 is deprecated. Do not use it. 
     }
 
