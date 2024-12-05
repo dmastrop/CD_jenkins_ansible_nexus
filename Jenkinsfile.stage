@@ -66,6 +66,12 @@ pipeline {
         // in Manage Jenkins Tools created a new sonarscanner1 with the latest sonar scanner selected. If that does not work
         // i can try using the next lower version and so on
         // create a new sonar token (user type?) and used that in the sonarserver1 configuration above
+                
+        
+        // add NEXUSPASS for nexus password used in the ansible stage below
+        // nexuslogin is both username and password and cannot use that.
+        // added secret called nexuspass to Jenkins secrets
+        NEXUSPASS = credentials('nexuspass')
 
     }
 
