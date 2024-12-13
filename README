@@ -254,3 +254,10 @@ post {
                 message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL} \n Parameterized staged build: ${env.BUILD} and Parameterized staged time: ${env.TIME} \n Deployed staged build to production: vproapp-${env.BUILD}-${env.TIME}.war"
         }
     }
+
+
+# Gitlab to Jenkins integration for project 18:
+
+This is very similar to the gitlab to jenkins integration for project 20 except try using the Gitlab integration plugin on gitlab for gitlab to jenkins communication, rather than a webhook.
+
+
