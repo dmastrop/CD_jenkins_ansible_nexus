@@ -261,3 +261,38 @@ post {
 This is very similar to the gitlab to jenkins integration for project 20 except try using the Gitlab integration plugin on gitlab for gitlab to jenkins communication, rather than a webhook.
 
 
+From project 20, the implemenation is the same on project 18 except instead of the webhook configuration on the gitlab dummy pipeline, instead use Integrations Gitlab plugin.   This plugin uses the jenkins URL and the username and password to authenticate gitlab to jenkins rather than a webhook and a jenkins generated token/secret. The integration is the recommended method for doing the gitlab to jenkins configuration.
+
+The only other change from project 20 is that in the Jenkins pipeline confuration for the SCM configuration the git URL is the following:
+ssh://git@gitlab.linode.cloudnetworktesting.com:*******/dmastrop/gitlab_to_jenkins_vprofile_project18.git
+
+The nonstandard git URL is required since a nonstandard ssh port is used on the gitlab docker container on the VPS deveops ecosystem.
+
+And the branch is */cd-ansible-project18 rather than the */main used in project 20.
+
+## Project20 gitlab to jenkins integration notes:
+
+n the VPS devops ecosystem, configure the gitlab relay to Jenkins to run this project.
+
+This involves configuring either a webhook or Jenkins integration on the dummy gitlab project
+
+On Jenkins a token needs to be generated for the jenkins to gitlab connection used in the project/pipeline and this needs to be put in the Gitlab webhook configuration above for the gitlab dummy project for gitlab to jenkins communication.  Test the gitlab webhook from gitlab.
+
+In Jenkins project select pipeline script from SCM and configure the SCM to point to the gitlab repository/docker container instance on the VPS.  Note the jenkins server has to be added to the VPS traefik whitelist so that jenkins traffic can be accepted into the VPS and routed to the gitlab docker container on the VPS
+The SCM configuration requires special configuration with ssh to the gitlab repo via git because VPS uses nonstandard SSH port.
+The git URL syntax is the following: ssh://git@gitlab.linode.cloudnetworktesting.com:*****/dmastrop/gitlab_to_jenkins_vprofile_project20c.git
+
+Configure the SSH private VPS key as a credential on jenkins so that it can be used in the SCM configuration above
+
+Use */main as branch specifier for now and Jenkinsfile.gitlabotjenkins jenkinsfile in the repository for the pipeline code for this gitlab to jenkins.  This jenkinsfile differs a bit from the Jenkinsfile used with a direct github to Jenkins project20, except there is some extra code to relay the Jenkins pipeline result back to Gitlab dummy pipelie on the Gitlab web console.
+
+Configure pipeline to trigger with any push,etc.... to gitlab.
+
+In Manage jenkins under Gitlab section configure the Jenkins to gitlab connection used in the above jenkins pipeline. This uses a token generated on gitlab with Maintainer role and scope api. The token is used to create a credential on Jenkins and that credential is used for the jenkins to gitlab connection. Test the connection to ensure that it works.
+The "Enable authentication for '/project' end-point" can be checked off because the webhook on gitlab has the token that was generated above on jenkins.
+
+
+So basically bi-directional tokens are used for bidirectional webhook gitlab to jenkins and connection: jenkins to gitlab connectivity.  NOTE: the jenkins to gitlab connection is not used to pull the code. The SCM configuration above on Jenkins is used to pull the code via SSH git as noted above.
+
+
+For project 18 gitlab to jenkins extension (see other repo) try using Gitlab integration instead of a gitlab hook for the gitlab to jenkins communication.  The rest of the configuration should be the same as that used here.
