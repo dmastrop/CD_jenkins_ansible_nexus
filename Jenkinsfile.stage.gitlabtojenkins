@@ -4,6 +4,8 @@
 // Thus we can color code the messages from slack
 //test94 95 96 with fixed SCM on jenkins configuration for the jenkins pipeline 97 98
 // test97 bring setup back up. Fix the jenkins to gitlab token (gitlab project18 token expired) and try again
+// test
+
 def COLOR_MAP = [
     'SUCCESS': 'good', 
     'FAILURE': 'danger',
